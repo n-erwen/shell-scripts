@@ -1,0 +1,39 @@
+help() {
+
+echo "Usage: git-stash-prev-commit [-c <number of commits to stash>]
+
+Uncommits and stashes the specified number of commits.
+Each commit is pushed to a separate stash.
+The stash name is set to the commit message.
+
+Options:
+    -c, --count    Number of commits to stash (default: 1)
+
+Examples:
+    git-commit-stash
+    git-commit-stash -c 3"
+}
+
+while (($# > 0)); do
+    case "$1" in
+        -c | --count)
+	    shift
+	    NUM_COMMITS=$1
+	    shift
+	;;
+        --help)
+	    help
+	    exit
+	;;
+    esac
+done
+
+if [[ -z $NUM_COMMITS ]]; then
+    NUM_COMMITS=1
+fi
+
+for (( i=0; i < NUM_COMMITS; i++ )); do
+    COMMIT_MESSAGE=$(git log --format=%B -n 1)
+    git reset --soft HEAD~1
+    git stash push -m "$COMMIT_MESSAGE"
+done

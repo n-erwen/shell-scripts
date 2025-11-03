@@ -1,0 +1,12 @@
+help () {
+    echo "Usage: git-publish-branch
+
+Pushes the current branch to origin. Useful if the branch hasn't been pushed before."
+}
+
+if [[ $1 == "--help" ]]; then
+    help
+    exit
+fi
+
+git push -u origin "$(git branch --show-current)"

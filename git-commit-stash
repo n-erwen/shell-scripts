@@ -1,0 +1,63 @@
+help () {
+    echo "Usage: git-commit-stash [--ref <stash reference>] [-m <commit message>] [-n]
+
+Unstashes and commits changes from the specified stash.
+
+Options:
+    --ref              Stash reference (default: stash@{0})
+    -m, --message      Commit message (default: stash message)
+    -n, --no-verify    Skip commit verification
+
+Examples:
+    git-commit-stash --ref stash@{1}
+    git-commit-stash -m \"WIP\" -n"
+}
+
+while (( $# > 0 )); do
+    case "$1" in
+	--ref)
+	    STASH_REF=$2
+	    shift; shift
+	;;
+	-m | --message)
+	    COMMIT_MESSAGE=$2
+	    shift; shift
+	;;
+        -n | --no-verify)
+	    NO_VERIFY=1
+	    shift
+	;;
+	*)
+	    help
+	    exit
+	;;
+    esac
+done
+
+if [[ -z $STASH_REF ]]; then
+    STASH_REF="stash@{0}"
+fi
+
+STASH_MESSAGE=$(git stash list | grep "$STASH_REF" | sed 's/: /\n/g' | tail -n 1)
+
+if [[ -z $STASH_MESSAGE ]]; then
+    echo "Error: Invalid stash reference"
+    exit
+fi
+
+if [[ -z $COMMIT_MESSAGE ]]; then
+    COMMIT_MESSAGE=$STASH_MESSAGE
+fi
+
+git stash pop "$STASH_REF" -q
+git add .
+
+if (( NO_VERIFY == 1)); then
+    git commit -m "$COMMIT_MESSAGE" -n
+else
+    git commit -m "$COMMIT_MESSAGE"
+    if (( $? != 0 )); then
+        echo "Pre-commit failed, re-stashing..."
+	git stash push -m "$COMMIT_MESSAGE"
+    fi
+fi

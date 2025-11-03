@@ -1,0 +1,26 @@
+help () {
+    echo "Usage: git-branch-remote-exists <branch name>
+
+Wrapper for git ls-remote to check whether branch exists on current repostiory. Branch name defaults to current branch.
+
+e.g.
+    git-branch-remote-exists develop"
+}
+
+if [[ -z $1 ]]; then
+    BRANCH_NAME="$(git branch --show-current)"
+elif [[ $1 == "--help" ]]; then
+    help
+    exit
+else
+    BRANCH_NAME=$1
+fi
+
+POSSIBLE_BRANCH_REMOTE=$(git ls-remote $(git config --get remote.origin.url) $BRANCH_NAME)
+
+echo -n "Does remote exist for branch '$BRANCH_NAME'? "
+if [[ -n "$POSSIBLE_BRANCH_REMOTE" ]]; then
+    echo "Yes"
+else
+    echo "No"
+fi
